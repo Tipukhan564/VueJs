@@ -56,19 +56,3 @@ export default {
 }
 </script>
   
-<style scoped>
-html,
-body {
-  background-color: #a0c49d;
-  height: 100%;
-}
-
-#map{
-  background-color: #f7ffe5;
-  margin: 50px;
-  text-align: center;
-  height: 650px;
-  border-radius: 12px;
-}
-</style>
-  

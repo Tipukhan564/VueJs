@@ -1,4 +1,4 @@
-<template>
+//<template>
     <h2>Maps</h2> 
     <button @click="getLocation" id >Your Location</button>
     <button>Path</button>   
@@ -56,19 +56,5 @@ export default {
 }
 </script>
   
-<style scoped>
-html,
-body {
-  background-color: #a0c49d;
-  height: 100%;
-}
 
-#map{
-  background-color: #f7ffe5;
-  margin: 50px;
-  text-align: center;
-  height: 650px;
-  border-radius: 12px;
-}
-</style>
   

@@ -1,68 +1,57 @@
 const cors = require('cors');
 const express = require('express');
-const mongoose = require('mongoose');
+const fs = require('fs');
 const app = express();
-const port = 3000; // Choose your preferred port number
-const { networkInterfaces } = require('os');
-
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/ZiiApp', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch((error) => {
-    console.error('Error connecting to MongoDB:', error);
-  });
+const port = 3000;
 
 // Set up middleware and routes
 app.use(express.json());
 app.use(cors());
 
+// Helper function to check if a user exists in the users.txt file
+function checkUserCredentials(email, password) {
+  const data = fs.readFileSync('users.txt', 'utf8');
+  const users = data.split('\n');
+  return users.some(user => {
+    const [savedUsername, savedEmail, savedPassword] = user.split(',');
+    return savedEmail.trim() === email.trim() && savedPassword.trim() === password.trim();
+  });
+}
 
-const User = require('./user');
-
-app.post('/register', (req, res) => {
+app.post('/signup', (req, res) => {
   const { username, email, password } = req.body;
-  
-  // Create a new user document
-  const user = new User({ username, email, password });
 
-  // Save the user to the database
-  user.save()
-    .then(() => {
-      res.status(200).json({ message: 'Registration successful' });
-    })
-    .catch((error) => {
-      console.error('Error saving user:', error);
-      res.status(500).json({ message: 'Error registering user' });
-    });
+  // Save the user data to the file
+  fs.appendFile('users.txt', `${username},${email},${password}\n`, 'utf8', (err) => {
+    if (err) {
+      console.error('Error writing to file:', err);
+      res.status(500).json({ message: 'Error writing data to file' });
+      return;
+    }
+    res.status(200).json({ message: 'Data written to file successfully' });
+  });
 });
 
 app.post('/login', (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
+  console.log('Email recieved at start is '+email+' '+password);
+  // Check if the user exists in the users.txt file
+  const userExists = checkUserCredentials(email, password);
+  console.log('User Exists: '+userExists);
+  if (userExists) {
+    // Credentials are valid
+    console.log('status: successful');
+    res.status(200).json(true);
+  } else {
+    // Invalid credentials
+    console.log('status: unsuccessful');
 
-  // Check if the username and password are valid
-  User.findOne({ username, password })
-    .then(user => {
-      if (user) {
-        // Credentials are valid
-        res.status(200).json({ success: true, message: 'Login successful' });
-      } else {
-        // Invalid credentials
-        res.status(401).json({ success: false, message: 'Invalid username or password. Please try again.' });
-      }
-    })
-    .catch(error => {
-      console.error('Error during login:', error);
-      res.status(500).json({ success: false, message: 'An error occurred during login. Please try again later.' });
-    });
+    res.status(401).json(false);
+  }
 });
 
 function getPrivateIP() {
-  const interfaces = networkInterfaces();
+  const interfaces = require('os').networkInterfaces();
 
   for (const interfaceName in interfaces) {
     const interface = interfaces[interfaceName];
@@ -80,18 +69,11 @@ app.get('/private-ip', (req, res) => {
   const privateIP = getPrivateIP();
   res.json({ privateIP });
 });
-/*
-var name = document.getElementById("displayloc");
-function getlocation(navigator.geolocation.getCurrentPosition(sjo))
-
-app.get('/location', (req, res)=>{
-
-  const text = "Latitude: " + postMessage.coords.latitude +"<br>Longitude: "+postMessage.coords.longitude;
-  res.json({text});
-});
-*/
 
 // Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
+
+
